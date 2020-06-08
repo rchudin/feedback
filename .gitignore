@@ -1,0 +1,17 @@
+/build
+
+#idea
+/.idea
+
+#vs
+/.vs
+
+#vscode
+/.vscode
+
+
+#test
+__debug_bin
+
+#config
+test_config.toml
