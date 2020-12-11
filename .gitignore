@@ -1,5 +1,5 @@
-/build
-/log.json
+/target
+
 
 #idea
 /.idea
@@ -9,10 +9,3 @@
 
 #vscode
 /.vscode
-
-
-#test
-__debug_bin
-
-#config
-test_config.toml
