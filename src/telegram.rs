@@ -1,3 +1,4 @@
+use crate::error::Error;
 use std::str::from_utf8;
 
 macro_rules! vec_bytes_str_or_empty {
@@ -18,13 +19,21 @@ pub(crate) struct Message {
     pub(crate) phone: Option<Vec<u8>>,
 }
 
-pub(crate) fn send_message(message: Message) {
+pub(crate) async fn send_message(message: Message) -> Result<(), Error> {
+    let subject = vec_bytes_str_or_empty!(message.subject);
+    let username = vec_bytes_str_or_empty!(message.username);
+    if subject.len() < 3 || username.len() < 3 {
+        return Err(Error::ValidationErrors);
+    }
+
     println!(
         "*Subject:* _{}_\n*Username:* _{}_\n*Email:* _{}_\n*Phone:* _{}_\n*Message:* _{}_\n",
-        vec_bytes_str_or_empty!(message.subject),
-        vec_bytes_str_or_empty!(message.username),
+        subject,
+        username,
         vec_bytes_str_or_empty!(message.email),
         vec_bytes_str_or_empty!(message.phone),
         vec_bytes_str_or_empty!(message.message),
     );
+
+    Ok(())
 }

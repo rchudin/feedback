@@ -1,4 +1,4 @@
-use crate::handlers;
+use crate::{error::Error, handlers};
 use std::convert::Infallible;
 use warp::{filters::body::BodyDeserializeError, http::StatusCode, Filter, Rejection, Reply};
 
@@ -29,6 +29,10 @@ pub fn feedback() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clon
 async fn rejection(err: Rejection) -> Result<impl Reply, Infallible> {
     let (code, message) = if err.is_not_found() {
         (StatusCode::NOT_FOUND, "Not Found")
+    } else if let Some(e) = err.find::<Error>() {
+        match e {
+            _ => (StatusCode::BAD_REQUEST, "BAD REQUEST"),
+        }
     } else if err.find::<BodyDeserializeError>().is_some() {
         (StatusCode::BAD_REQUEST, "Bad Request")
     } else if err.find::<warp::reject::MethodNotAllowed>().is_some() {

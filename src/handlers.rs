@@ -30,7 +30,7 @@ pub(crate) async fn feedback(form: FormData) -> Result<impl Reply, Rejection> {
         };
     }
 
-    telegram::send_message(message);
+    telegram::send_message(message).await?;
 
     Ok(StatusCode::OK)
 }
