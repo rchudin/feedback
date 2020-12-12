@@ -8,5 +8,7 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "0.2", features = ["full"] }
+futures = "0.3"
+bytes = "0.5"
 warp = "0.2"
 clap = "2.33"
