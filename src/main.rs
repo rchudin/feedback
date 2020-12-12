@@ -3,6 +3,7 @@ mod routing;
 
 use std::net::SocketAddr;
 use tokio::{signal, sync::oneshot};
+use warp::Filter;
 
 fn get_matches<'a>() -> clap::ArgMatches<'a> {
     clap::App::new(env!("CARGO_PKG_NAME"))
@@ -34,9 +35,9 @@ async fn main() {
         _ => 3030,
     };
 
-    let token = matches
-        .value_of("token")
-        .expect("Telegram bot token missing!");
+    // let token = matches
+    //     .value_of("token")
+    //     .expect("Telegram bot token missing!");
 
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
     let (tx, rx) = oneshot::channel();
