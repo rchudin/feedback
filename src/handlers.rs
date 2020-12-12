@@ -1,6 +1,6 @@
-use crate::{telegram, utility::stream_data};
+use crate::{state::State, telegram, utility::stream_data};
 use futures::stream::TryStreamExt;
-use std::convert::Infallible;
+use std::{convert::Infallible, sync::Arc};
 use warp::{
     http::StatusCode,
     multipart::{FormData, Part},
@@ -29,7 +29,7 @@ pub(crate) async fn status() -> Result<impl Reply, Infallible> {
     Ok(StatusCode::OK)
 }
 
-pub(crate) async fn feedback(form: FormData) -> Result<impl Reply, Rejection> {
+pub(crate) async fn feedback(state: Arc<State>, form: FormData) -> Result<impl Reply, Rejection> {
     #[derive(Default)]
     pub(crate) struct Form {
         pub(crate) username: Option<Vec<u8>>,
@@ -58,8 +58,8 @@ pub(crate) async fn feedback(form: FormData) -> Result<impl Reply, Rejection> {
     }
 
     telegram::send_message(
-        "",
-        "",
+        &*state.token,
+        &*state.chat_id,
         telegram::Message {
             username: bytes_as_str_or_empty!(message.username),
             subject: bytes_as_str_or_empty!(message.subject),

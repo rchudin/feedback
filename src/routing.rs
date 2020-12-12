@@ -1,5 +1,5 @@
-use crate::{error::Error, handlers};
-use std::convert::Infallible;
+use crate::{error::Error, handlers, state::State};
+use std::{convert::Infallible, sync::Arc};
 use warp::{filters::body::BodyDeserializeError, http::StatusCode, Filter, Rejection, Reply};
 
 macro_rules! path {
@@ -11,19 +11,28 @@ macro_rules! path {
     };
 }
 
-pub(crate) fn routing() -> impl Filter<Extract = impl Reply, Error = Infallible> + Clone {
-    status().or(feedback()).recover(rejection)
+pub(crate) fn routing(
+    state: State,
+) -> impl Filter<Extract = impl Reply, Error = Infallible> + Clone {
+    status().or(feedback(state)).recover(rejection)
 }
 
 pub fn status() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     path!().and(warp::get()).and_then(handlers::status)
 }
 
-pub fn feedback() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+pub fn feedback(state: State) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     path!()
         .and(warp::post())
+        .and(with_state(Arc::new(state)))
         .and(warp::multipart::form().max_length(5_000_000))
         .and_then(handlers::feedback)
+}
+
+fn with_state(
+    state: Arc<State>,
+) -> impl Filter<Extract = (Arc<State>,), Error = Infallible> + Clone {
+    warp::any().map(move || state.clone())
 }
 
 async fn rejection(err: Rejection) -> Result<impl Reply, Infallible> {
