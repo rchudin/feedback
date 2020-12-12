@@ -37,9 +37,13 @@ async fn main() {
         _ => 3030,
     };
 
-    // let token = matches
-    //     .value_of("token")
-    //     .expect("Telegram bot token missing!");
+    let token = matches
+        .value_of("token")
+        .expect("Telegram bot token missing!");
+
+    telegram::status(token)
+        .await
+        .expect("Invalid Telegram bot token!");
 
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
     let (tx, rx) = oneshot::channel();

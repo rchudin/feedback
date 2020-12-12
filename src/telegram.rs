@@ -37,3 +37,20 @@ pub(crate) async fn send_message(message: Message) -> Result<(), Error> {
 
     Ok(())
 }
+
+pub(crate) async fn status(token: &str) -> Result<(), ()> {
+    let resp = match reqwest::get(&*format!(
+        "https://api.telegram.org/bot{}/getUpdates",
+        token
+    ))
+    .await
+    {
+        Ok(x) => x,
+        Err(_) => return Err(()),
+    };
+    if resp.status() != 200 {
+        return Err(());
+    }
+
+    Ok(())
+}
