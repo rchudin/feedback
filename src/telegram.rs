@@ -1,4 +1,5 @@
 use crate::error::Error;
+use reqwest::multipart;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -27,6 +28,26 @@ struct Response<T: Serialize> {
 #[derive(Debug, Serialize, Deserialize)]
 struct MessageInfo {
     message_id: i32,
+}
+
+pub(crate) async fn status(token: &str) -> Result<(), Error> {
+    #[derive(Debug, Serialize, Deserialize)]
+    struct Response {
+        ok: bool,
+    }
+
+    let resp: Response = reqwest::get(&*format!(
+        "https://api.telegram.org/bot{}/getUpdates",
+        token
+    ))
+    .await?
+    .json()
+    .await?;
+
+    match resp.ok {
+        false => Err(Error::TelegramError),
+        true => Ok(()),
+    }
 }
 
 pub(crate) async fn send_message<'a>(
@@ -62,25 +83,35 @@ pub(crate) async fn send_message<'a>(
 
     let resp: Response<MessageInfo> = reqwest::get(&*text).await?.json().await?;
 
-    Ok(resp.result.message_id)
+    match resp.ok {
+        false => Err(Error::TelegramError),
+        true => Ok(resp.result.message_id),
+    }
 }
 
-pub(crate) async fn status(token: &str) -> Result<(), Error> {
-    #[derive(Debug, Serialize, Deserialize)]
-    struct Response {
-        ok: bool,
-    }
+pub(crate) async fn send_document<'a>(
+    token: &'a str,
+    chat_id: &'a str,
+    reply_to_message_id: i32,
+    part: multipart::Part,
+) -> Result<i32, Error> {
+    let form = multipart::Form::new().part("document", part);
 
-    let resp: Response = reqwest::get(&*format!(
-        "https://api.telegram.org/bot{}/getUpdates",
-        token
-    ))
-    .await?
-    .json()
-    .await?;
+    let client = reqwest::Client::new();
+
+    let resp: Response<MessageInfo> = client
+        .post(&*format!(
+            "https://api.telegram.org/bot{}/sendDocument?chat_id={}&reply_to_message_id={}",
+            token, chat_id, reply_to_message_id
+        ))
+        .multipart(form)
+        .send()
+        .await?
+        .json()
+        .await?;
 
     match resp.ok {
         false => Err(Error::TelegramError),
-        true => Ok(()),
+        true => Ok(resp.result.message_id),
     }
 }

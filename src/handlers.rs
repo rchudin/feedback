@@ -1,4 +1,8 @@
-use crate::{state::State, telegram, utility::stream_data};
+use crate::{
+    state::State,
+    telegram,
+    utility::{reqwest_file_part, stream_data},
+};
 use futures::stream::TryStreamExt;
 use std::{convert::Infallible, sync::Arc};
 use warp::{
@@ -6,6 +10,9 @@ use warp::{
     multipart::{FormData, Part},
     Rejection, Reply,
 };
+
+const OK: &str = "OK";
+const FILE_NOT_SENT: &str = "file not sent";
 
 macro_rules! bytes_as_str_or_empty {
     ($a:expr) => {
@@ -45,6 +52,7 @@ pub(crate) async fn feedback(state: Arc<State>, form: FormData) -> Result<impl R
     })?;
 
     let mut message = Form::default();
+    let mut part_file: Option<Part> = None;
 
     for x in parts {
         match x.name() {
@@ -53,11 +61,12 @@ pub(crate) async fn feedback(state: Arc<State>, form: FormData) -> Result<impl R
             "email" => message.email = stream_data(x).await.ok(),
             "phone" => message.phone = stream_data(x).await.ok(),
             "message" => message.text = stream_data(x).await.ok(),
+            "file" => part_file = Some(x),
             _ => {}
         };
     }
 
-    telegram::send_message(
+    let message_id = telegram::send_message(
         &*state.token,
         &*state.chat_id,
         telegram::Message {
@@ -70,5 +79,19 @@ pub(crate) async fn feedback(state: Arc<State>, form: FormData) -> Result<impl R
     )
     .await?;
 
-    Ok(StatusCode::OK)
+    if let Some(part) = part_file {
+        if let Ok(part) = reqwest_file_part(part).await {
+            if let Ok(_) =
+                telegram::send_document(&*state.token, &*state.chat_id, message_id, part).await
+            {
+                return Ok(warp::reply::with_status(OK, StatusCode::OK));
+            }
+        }
+        return Ok(warp::reply::with_status(
+            FILE_NOT_SENT,
+            StatusCode::BAD_REQUEST,
+        ));
+    }
+
+    Ok(warp::reply::with_status(OK, StatusCode::OK))
 }

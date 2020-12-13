@@ -42,7 +42,7 @@ async fn main() {
 
     let port: u16 = match matches.value_of("port") {
         Some(p) => p.parse::<u16>().unwrap(),
-        _ => 3030,
+        _ => 3911,
     };
 
     let token = matches
