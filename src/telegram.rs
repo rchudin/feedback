@@ -5,15 +5,15 @@ use validator::Validate;
 
 #[derive(Debug, Validate)]
 pub(crate) struct Message<'a> {
-    #[validate(length(min = 1, max = 256))]
+    #[validate(length(min = 1, max = 50))]
     pub(crate) username: &'a str,
-    #[validate(length(min = 1, max = 512))]
+    #[validate(length(min = 1, max = 128))]
     pub(crate) subject: &'a str,
     // #[validate(email)]
     #[validate(length(max = 512))]
     pub(crate) email: Option<&'a str>,
     // #[validate(phone)]
-    #[validate(length(max = 50))]
+    #[validate(length(max = 25))]
     pub(crate) phone: Option<&'a str>,
     #[validate(length(max = 3000))]
     pub(crate) text: Option<&'a str>,
