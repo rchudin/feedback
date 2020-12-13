@@ -4,6 +4,7 @@ use validator::ValidationErrors;
 pub enum Error {
     ValidationErrors(ValidationErrors),
     ReqwestError(reqwest::Error),
+    TelegramError,
 }
 
 impl std::error::Error for Error {}
@@ -15,6 +16,7 @@ impl std::fmt::Display for Error {
         match *self {
             Error::ValidationErrors(ref e) => e.fmt(f),
             Error::ReqwestError(ref e) => e.fmt(f),
+            Error::TelegramError => write!(f, "Telegram Error"),
         }
     }
 }
