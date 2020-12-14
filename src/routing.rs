@@ -25,7 +25,7 @@ pub fn feedback(state: State) -> impl Filter<Extract = impl Reply, Error = Rejec
     path!()
         .and(warp::post())
         .and(with_state(Arc::new(state)))
-        .and(warp::multipart::form().max_length(5_000_000))
+        .and(warp::multipart::form().max_length(1024 * 1024 * 5))
         .and_then(handlers::feedback)
 }
 
