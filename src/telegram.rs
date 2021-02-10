@@ -58,7 +58,7 @@ pub(crate) async fn send_message<'a>(
     message.validate()?;
 
     let mut text = format!(
-        "https://api.telegram.org/bot{}/sendMessage?chat_id={}&parse_mode=markdown&text=*Subject:* _{}_%0A*Username:* _{}",
+        "https://api.telegram.org/bot{}/sendMessage?chat_id={}&parse_mode=html&text=<b>Subject:</b> {}%0A<b>Username:</b> {}",
         token,
         chat_id,
         message.subject,
@@ -66,20 +66,19 @@ pub(crate) async fn send_message<'a>(
     );
 
     if let Some(x) = message.email {
-        text.push_str("_%0A*Email:* _");
+        text.push_str("%0A<b>Email:</b> ");
         text.push_str(x);
     }
 
     if let Some(x) = message.phone {
-        text.push_str("_%0A*Phone:* _");
+        text.push_str("%0A<b>Phone:</b> ");
         text.push_str(x);
     }
 
     if let Some(x) = message.text {
-        text.push_str("_%0A_");
+        text.push_str("%0A");
         text.push_str(x);
     }
-    text.push_str("_");
 
     let resp: Response<MessageInfo> = reqwest::get(&*text).await?.json().await?;
 
